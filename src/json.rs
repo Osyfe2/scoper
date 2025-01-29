@@ -1,14 +1,14 @@
 use serde_json::{Map, Value};
 
-use crate::{EventType, MetaTrace, RecordScope, TimePoint, Trace, TraceInfo, global_scope};
+use crate::{EventType, MetaTrace, RecordScope, TimePoint, Trace, TraceInfo, global};
 
 impl RecordScope
 {
     pub(crate) fn fetch_data(&mut self) -> Map<String, Value>
     {
-        let traces = global_scope::flush_traces();
-        let counters = global_scope::flush_counters();
-        let instances = global_scope::flush_instances();
+        let traces = global::flush_traces();
+        let counters = global::flush_counters();
+        let instances = global::flush_instances();
 
         //Not needed but might be faster on load
         //Needed per thread but should hold -> Testing
