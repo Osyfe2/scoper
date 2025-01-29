@@ -38,7 +38,8 @@ impl RecordScope
 {
     pub(super) fn write(&mut self) -> std::io::Result<()>
     {
-        let writer = &mut BufWriter::new(File::create(&self.path)?); //TODO allow appending as different process instead of overwriting
+        //TODO allow appending as different process instead of overwriting
+        let writer = &mut BufWriter::new(File::create(&self.path)?); 
         let data = self.fetch_data();
         serde_json::to_writer(writer, &data)?;
 
