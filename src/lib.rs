@@ -288,7 +288,7 @@ pub mod macro_rules
             record_instant!("", $name, $scope_size);
         };
         ($name: expr) => {
-            record_instant!($name, InstantScopeSize::Thread);
+            record_instant!($name, $crate::InstantScopeSize::Process);
         };
     }
 }
@@ -298,7 +298,7 @@ mod test
 {
     use std::{path::Path, thread::sleep, time::Duration};
 
-    use crate::{global_scope::counter_event, macros::*, InstantScopeSize, RecordScope};
+    use crate::{global_scope::counter_event, macros::*, RecordScope};
     fn wait_30_ms()
     {
         use crate::{Scope, TraceInfo};
