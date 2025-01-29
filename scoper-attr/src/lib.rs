@@ -4,17 +4,17 @@ extern crate proc_macro;
 
 use crate::proc_macro::TokenStream;
 
-/// Creates a trace that can be recorded for the runtime of the function.
+/// Adds the function scope to the scoper recording
 ///
 /// # Panics
 ///
 /// Panics if not used with functions or - for now - with additional attributes.
 #[proc_macro_attribute]
-pub fn trace(attr: TokenStream, input: TokenStream) -> TokenStream
+pub fn record(attr: TokenStream, input: TokenStream) -> TokenStream
 {
-    assert!(attr.is_empty(), "Use #[trace] without further attributes."); //TODO support header
+    assert!(attr.is_empty(), "Use #[record] without further attributes."); //TODO support header
 
-    let mut input: syn::ItemFn = syn::parse2(input.into()).expect("Use #[trace] only on functions.");
+    let mut input: syn::ItemFn = syn::parse2(input.into()).expect("Use #[record] only on functions.");
     let name = input.sig.ident.to_string();
 
     /* //Todo generics
@@ -32,7 +32,7 @@ pub fn trace(attr: TokenStream, input: TokenStream) -> TokenStream
     let mut ext: syn::ItemFn = syn::parse_quote! {
         fn bla()
         {
-            trace_scope!(#name);
+            record_scope!(#name);
         }
     };
 

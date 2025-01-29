@@ -19,7 +19,7 @@ pub(crate) use std::time::Instant as TimePoint;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct Key(*const TraceInfo<'static>);
 
-impl  Key
+impl Key
 {
     fn from_static(data: &'static TraceInfo) -> Self { 
         Self(std::ptr::from_ref::<TraceInfo>(data)) }
@@ -31,11 +31,11 @@ unsafe impl Send for Key {}
 
 pub mod macros
 {
-    pub use scoper_attr::trace;
+    pub use scoper_attr::record;
 
-    pub use crate::trace_scope;
-    pub use crate::trace_value;
-    pub use crate::trace_instant;
+    pub use crate::record_scope;
+    pub use crate::record_value;
+    pub use crate::record_instant;
 }
 
 pub use global_scope::counter_event;
@@ -235,7 +235,7 @@ pub mod macro_rules
     pub use const_format::str_replace;
 
     #[macro_export]
-    macro_rules! trace_scope {
+    macro_rules! record_scope {
         ($header: expr, $name: expr) => {
             static TRACE_SCOPE_INFO: $crate::TraceInfo = $crate::TraceInfo {
                 name: $name,
@@ -247,12 +247,12 @@ pub mod macro_rules
             let _profiling_scope = $crate::Scope::start(&TRACE_SCOPE_INFO);
         };
         ($name: expr) => {
-            trace_scope!("", $name)
+            record_scope!("", $name)
         };
     }
 
     #[macro_export]
-    macro_rules! trace_value {
+    macro_rules! record_value {
         ($header: expr, $name: expr, $int: expr, $float: expr) => {
             {
                 static TRACE_COUNTER_INFO: $crate::TraceInfo = $crate::TraceInfo {
@@ -266,13 +266,13 @@ pub mod macro_rules
         };
         /*
         ($name: expr) => {
-            moniter_value!("", $name)
+            record_value!("", $name)
         };
         */
     }
 
     #[macro_export]
-    macro_rules! trace_instant {
+    macro_rules! record_instant {
         ($header: expr, $name: expr, $scope_size: expr) => {
             {
                 static TRACE_INSTANT_INFO: $crate::TraceInfo = $crate::TraceInfo {
@@ -285,10 +285,10 @@ pub mod macro_rules
             }
         };
         ($name: expr, $scope_size: expr) => {
-            trace_instant!("", $name, $scope_size);
+            record_instant!("", $name, $scope_size);
         };
         ($name: expr) => {
-            trace_instant!($name, InstantScopeSize::Thread);
+            record_instant!($name, InstantScopeSize::Thread);
         };
     }
 }
@@ -316,7 +316,7 @@ mod test
         sleep(Duration::from_millis(30));
     }
 
-    #[trace]
+    #[record]
     fn wait_30_ms_macro() { sleep(Duration::from_millis(30)); }
 
     #[test]
@@ -350,7 +350,7 @@ mod test
         {
             wait_30_ms_macro();
             sleep(Duration::from_millis(5));
-            trace_value!("", "test_value", i.into(), 0.1 * f64::from(i + 1));
+            record_value!("", "test_value", i.into(), 0.1 * f64::from(i + 1));
         }
     }
 
@@ -362,7 +362,7 @@ mod test
             s.spawn(|| {
                 for _ in 0..10
                 {
-                    trace_scope!("Myheader", "Thread C");
+                    record_scope!("Myheader", "Thread C");
                     wait_30_ms_macro();
                     sleep(Duration::from_millis(5));
                 }
@@ -370,18 +370,18 @@ mod test
             s.spawn(|| {
                 for _ in 0..10
                 {
-                    trace_scope!("Thread D");
+                    record_scope!("Thread D");
                     wait_30_ms();
                     sleep(Duration::from_millis(5));
                 }
             });
         });
-        trace_instant!("First join");
+        record_instant!("First join");
         std::thread::scope(|s| {
             s.spawn(|| {
                 for _ in 0..10
                 {
-                    trace_scope!("Thread E");
+                    record_scope!("Thread E");
                     wait_30_ms_macro();
                     sleep(Duration::from_millis(5));
                 }
