@@ -1,12 +1,12 @@
 use std::{
     fs::File,
     io::BufWriter,
-    path::{Path, PathBuf},
+    path::{Path, PathBuf}, thread::ThreadId,
 };
 
 use serde_json as json;
 
-use crate::{MetaTrace, Pid, Tid, TimePoint};
+use crate::{MetaTrace, Pid, TimePoint};
 
 pub struct RecordScope
 {
@@ -58,9 +58,9 @@ impl RecordScope
 
     fn add_meta_trace(&mut self, meta_trace: MetaTrace) { self.meta_traces.push(meta_trace); }
 
-    pub fn name_thread(&mut self, thread_id: Tid, header: Pid, name: String)
+    pub fn name_thread(&mut self, thread_id: ThreadId, header: Pid, name: String)
     {
-        self.add_meta_trace(MetaTrace::ThreadName(header, thread_id, name));
+        self.add_meta_trace(MetaTrace::ThreadName(header, thread_id.as_u64(), name));
     }
 
     pub fn final_header(&mut self, old_header: Pid, new_header: String)

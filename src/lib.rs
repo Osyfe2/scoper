@@ -48,20 +48,15 @@ impl InstantScopeSize
     }
 }
 
-union TraceAddition
-{
-    end: TimePoint,
-    int_float: (i64, f64),
-    scope_size: InstantScopeSize,
-}
-
 struct Trace<const TYPE: EventType>
 {
     thread_id: ThreadId,     //All trace types
     start: TimePoint,        //All trace types
-    info: &'static TraceInfo<'static>,                //Key to static info
+    info: Info,              //static info
     addition: TraceAddition, //non static data
 }
+
+pub type Info = &'static TraceInfo<'static>;
 
 pub struct TraceInfo<'a>
 {
@@ -70,6 +65,13 @@ pub struct TraceInfo<'a>
     pub category: &'a str,
     pub header: &'a str, //(PID)
     pub args: &'a str,
+}
+
+union TraceAddition
+{
+    end: TimePoint,
+    int_float: (i64, f64),
+    scope_size: InstantScopeSize,
 }
 
 type Pid = &'static str;
@@ -95,8 +97,8 @@ mod test
     use crate::{macros::*, record_custom_value, RecordScope};
     fn wait_30_ms()
     {
-        use crate::{Scope, TraceInfo};
-        static SCOPE_INFO: TraceInfo = TraceInfo {
+        use crate::{Scope, TraceInfo, Info};
+        static SCOPE_INFO: Info = &TraceInfo {
             //event_typ: EventType::Scope,
             name: "30 Millis",
             category: "inlinetest",
@@ -106,7 +108,7 @@ mod test
 
         let _profiling_scope = Scope::start(&SCOPE_INFO);
         let value = 0.8;
-        record_custom_value(&SCOPE_INFO, (0, value));
+        record_custom_value(SCOPE_INFO, (0, value));
         sleep(Duration::from_millis(30));
     }
 

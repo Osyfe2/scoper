@@ -3,7 +3,7 @@ use std::{
     thread::current,
 };
 
-use super::{EventType, InstantScopeSize, TimePoint, Trace, TraceAddition, TraceInfo};
+use super::{EventType, Info, InstantScopeSize, TimePoint, Trace, TraceAddition};
 
 type Traces<const TYPE: EventType> = Vec<Trace<TYPE>>;
 static SCOPES: LazyLock<Mutex<Traces<{ EventType::Scope }>>> = LazyLock::new(const { || Mutex::new(Traces::new()) });
@@ -20,7 +20,7 @@ pub(super) fn flush_instances() -> Traces<{ EventType::Instant }> { std::mem::ta
 
 impl<const TYPE: EventType> Trace<TYPE>
 {
-    fn build(info: &'static TraceInfo, start: TimePoint, addition: TraceAddition) -> Self
+    fn build(info: Info, start: TimePoint, addition: TraceAddition) -> Self
     {
         Self {
             thread_id: current().id(),
@@ -30,28 +30,20 @@ impl<const TYPE: EventType> Trace<TYPE>
         }
     }
 
-    fn build_now(info: &'static TraceInfo, addition: TraceAddition) -> Self
-    {
-        Self {
-            thread_id: current().id(),
-            info,
-            start: TimePoint::now(),
-            addition,
-        }
-    }
+    fn build_now(info: Info, addition: TraceAddition) -> Self { Self::build(info, TimePoint::now(), addition) }
 }
 
-pub fn record_custom_scope(info: &'static TraceInfo, start: TimePoint, end: TimePoint)
+pub fn record_custom_scope(info: Info, start: TimePoint, end: TimePoint)
 {
     access_scopes().push(Trace::build(info, start, TraceAddition { end }));
 }
 
-pub fn record_custom_value(info: &'static TraceInfo, int_float: (i64, f64))
+pub fn record_custom_value(info: Info, int_float: (i64, f64))
 {
     access_counters().push(Trace::build_now(info, TraceAddition { int_float }));
 }
 
-pub fn record_custom_instant(info: &'static TraceInfo, scope_size: InstantScopeSize)
+pub fn record_custom_instant(info: Info, scope_size: InstantScopeSize)
 {
     access_instances().push(Trace::build_now(info, TraceAddition { scope_size }));
 }

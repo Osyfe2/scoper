@@ -1,6 +1,6 @@
 use std::cell::RefCell;
 
-use crate::{TimePoint, TraceInfo, record_custom_scope};
+use crate::{record_custom_scope, Info, TimePoint};
 
 type OpenScopes = Vec<TimePoint>;
 
@@ -10,17 +10,17 @@ thread_local! {
 
 pub struct Scope
 {
-    key: Key,
+    info: Info,
 }
 
 impl Scope
 {
     #[must_use]
-    pub fn start(data: &'static TraceInfo) -> Self
+    pub fn start(info: Info) -> Self
     {
         open_scope();
         Self {
-            key: Key::from_static(data),
+            info,
         }
     }
 }
@@ -56,19 +56,8 @@ fn pop_scope_opening_time() -> TimePoint
     */
 }
 
-pub(super) fn close_scope(Scope { key }: &Scope)
+pub(super) fn close_scope(Scope { info }: &Scope)
 {
     let start = pop_scope_opening_time();
-    record_custom_scope(key.read(), start, TimePoint::now());
-}
-
-#[repr(transparent)]
-#[derive(Clone, Copy)]
-struct Key(&'static TraceInfo<'static>);
-
-impl Key
-{
-    fn from_static(info: &'static TraceInfo) -> Self { Self(info) }
-
-    fn read(self) -> &'static TraceInfo<'static> { self.0 }
+    record_custom_scope(info, start, TimePoint::now());
 }
