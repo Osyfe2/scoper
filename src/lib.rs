@@ -5,13 +5,11 @@
 use std::{num::NonZero, thread::ThreadId};
 
 use eventtypes::EventType;
-use slots::SlotIndex;
 
 mod eventtypes;
 mod json;
 mod macro_rules;
 mod recordscope;
-mod slots;
 mod global;
 
 pub use recordscope::RecordScope;
@@ -41,7 +39,6 @@ unsafe impl Send for Key {}
 
 pub struct Scope
 {
-    level: SlotIndex, //pretty big but key requires align, could be smaller if additional data needed
     key: Key,
 }
 
@@ -50,10 +47,9 @@ impl Scope
     #[must_use]
     pub fn start(data: &'static TraceInfo) -> Self
     {
-        let level = global::open_scope();
+        global::open_scope();
         Self {
             key: Key::from_static(data),
-            level,
         }
     }
 }
