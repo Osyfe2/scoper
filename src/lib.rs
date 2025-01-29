@@ -11,9 +11,11 @@ mod json;
 mod macro_rules;
 mod recordscope;
 mod global;
+mod scopes;
 
 pub use recordscope::RecordScope;
-pub use global::{record_custom_instant, record_custom_value};
+pub use scopes::Scope;
+pub use global::{record_custom_instant, record_custom_value, record_custom_scope};
 
 pub mod macros
 {
@@ -23,41 +25,6 @@ pub mod macros
 }
 
 pub(crate) use std::time::Instant as TimePoint;
-
-#[repr(transparent)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-struct Key(*const TraceInfo<'static>);
-
-impl Key
-{
-    fn from_static(data: &'static TraceInfo) -> Self { Self(std::ptr::from_ref::<TraceInfo>(data)) }
-
-    fn read(self) -> &'static TraceInfo<'static> { unsafe { &*self.0 } }
-}
-
-unsafe impl Send for Key {}
-
-pub struct Scope
-{
-    key: Key,
-}
-
-impl Scope
-{
-    #[must_use]
-    pub fn start(data: &'static TraceInfo) -> Self
-    {
-        global::open_scope();
-        Self {
-            key: Key::from_static(data),
-        }
-    }
-}
-
-impl Drop for Scope
-{
-    fn drop(&mut self) { global::close_scope(self); }
-}
 
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Ord, Eq)]
 pub enum InstantScopeSize
@@ -92,7 +59,7 @@ struct Trace<const TYPE: EventType>
 {
     thread_id: ThreadId,     //All trace types
     start: TimePoint,        //All trace types
-    key: Key,                //Key to static info
+    info: &'static TraceInfo<'static>,                //Key to static info
     addition: TraceAddition, //non static data
 }
 

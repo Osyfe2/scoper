@@ -40,7 +40,7 @@ impl Trace<{ EventType::Scope }>
             category,
             header,
             args,
-        } = self.key.read();
+        } = self.info;
 
         let dur = unsafe { self.addition.end }.duration_since(self.start).as_micros();
 
@@ -67,7 +67,7 @@ impl Trace<{ EventType::Counter }>
             category,
             header,
             args,
-        } = self.key.read();
+        } = self.info;
 
         let (i, f) = unsafe { self.addition.int_float };
         let mut counter = serde_json::json!({
@@ -110,7 +110,7 @@ impl Trace<{ EventType::Instant }>
             category,
             header,
             args,
-        } = self.key.read();
+        } = self.info;
 
         let scope_size = unsafe { self.addition.scope_size };
 
