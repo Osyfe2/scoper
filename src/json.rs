@@ -64,7 +64,7 @@ impl TaggedTrace
 
         // Viewer do not handle negative well
         //let time_stamp = signed_time(zero, base.start);
-        let time_stamp = base.start.checked_duration_since(zero)?.as_micros();
+        let time_point = base.time_point.checked_duration_since(zero)?.as_micros();
         
         let &TraceInfo {
             name,
@@ -79,7 +79,7 @@ impl TaggedTrace
             "pid": header,
             "tid": base.thread_id.as_u64(),
             "ph": self.code(),
-            "ts": time_stamp,
+            "ts": time_point,
             "args": args,
         });
 
@@ -90,7 +90,9 @@ impl TaggedTrace
             {
                 Scope(scope) =>
                 {
-                    let dur = scope.end.duration_since(scope.base.start.max(zero)).as_micros();
+                    let start = scope.start.duration_since(zero).as_micros();
+                    let dur = scope.base.time_point.duration_since(zero).as_micros() - start;
+                    ret["ts"] = json!(start);
                     ret.insert("dur".to_string(), json!(dur));
                 },
                 Counter(counter) =>

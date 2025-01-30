@@ -20,18 +20,18 @@ pub(super) enum TaggedTrace
 pub(super) struct BaseInfo
 {
     pub thread_id: ThreadId, //All trace types
-    pub start: TimePoint,    //All trace types
+    pub time_point: TimePoint,    //All trace types
     pub info: Info,          //static info
 }
 
 impl BaseInfo
 {
-    pub(crate) fn build(info: Info, start: TimePoint) -> Self
+    pub(crate) fn build(info: Info, time_point: TimePoint) -> Self
     {
         Self {
             thread_id: current().id(),
             info,
-            start,
+            time_point,
         }
     }
 

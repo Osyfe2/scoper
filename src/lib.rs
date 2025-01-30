@@ -125,10 +125,10 @@ mod test
             wait_30_ms();
         }
 
-        record.set_starting_time();
-        
         std::thread::scope(|s| {
             s.spawn(|| {
+                sleep(Duration::from_millis(20));
+                record.set_starting_time();
                 for _ in 0..10
                 {
                     record_scope!("Myheader", "Thread C");

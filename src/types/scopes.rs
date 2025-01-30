@@ -13,7 +13,7 @@ thread_local! {
 pub(crate) struct ScopeData
 {
     pub base: BaseInfo,
-    pub end: TimePoint,
+    pub start: TimePoint,
 }
 
 pub struct Scope

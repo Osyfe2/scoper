@@ -5,8 +5,8 @@ use crate::{types::{BaseInfo, CounterData, InstantData, ScopeData, TaggedTrace, 
 pub fn record_custom_scope(info: Info, start: TimePoint, end: TimePoint)
 {
     SCOPES.push(ScopeData {
-        base: BaseInfo::build(info, start),
-        end,
+        base: BaseInfo::build(info, end),
+        start,
     });
 }
 
