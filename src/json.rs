@@ -1,14 +1,12 @@
-use serde_json::{Map, Value};
+use serde_json::{Map, Number, Value as JsonValue};
 
-use crate::{EventType, MetaTrace, RecordScope, TimePoint, Trace, TraceInfo, global};
+use crate::{global::{self, TaggedTrace}, EventType, MetaTrace, RecordScope, TimePoint, Trace, TraceInfo, Value};
 
 impl RecordScope
 {
-    pub(crate) fn fetch_data(&mut self) -> Map<String, Value>
+    pub(crate) fn fetch_data(&mut self) -> Map<String, JsonValue>
     {
-        let traces = global::flush_traces();
-        let counters = global::flush_counters();
-        let instances = global::flush_instances();
+        let traces = global::flush_buffers();
 
         //Not needed but might be faster on load
         //Needed per thread but should hold -> Testing
@@ -19,20 +17,34 @@ impl RecordScope
             .meta_traces
             .iter()
             .map(MetaTrace::json_format)
-            .chain(traces.iter().map(|t| t.json_format(self.record_start)))
-            .chain(counters.iter().map(|t| t.json_format(self.record_start)))
-            .chain(instances.iter().map(|t| t.json_format(self.record_start)))
+            .chain(traces.map(|t| t.json_format(self.record_start)))
             .collect();
-        data.insert("traceEvents".to_string(), Value::Array(traces));
-        data.insert("displayTimeUnit".to_string(), Value::String("ms".to_string())); //ns allowed as well
+        data.insert("traceEvents".to_string(), JsonValue::Array(traces));
+        data.insert("displayTimeUnit".to_string(), JsonValue::String("ms".to_string())); //ns allowed as well
         data.append(&mut self.meta_data);
         data
     }
 }
 
-impl Trace<{ EventType::Scope }>
+impl TaggedTrace {
+    fn json_format(&self, zero: TimePoint) -> JsonValue
+    {
+        match self {
+            TaggedTrace::Scope(trace) => trace.json_format(zero),
+            TaggedTrace::Counter(trace) => trace.json_format(zero),
+            TaggedTrace::Instant(trace) => trace.json_format(zero),
+        }
+    }
+}
+
+impl <const TYPE: EventType> Trace<TYPE>
 {
-    fn json_format(&self, zero: TimePoint) -> Value
+    fn code() -> char
+    {
+        TYPE.code()
+    }
+
+    fn json_format(&self, zero: TimePoint) -> JsonValue
     {
         let time_stamp = self.start.duration_since(zero).as_micros();
         let &TraceInfo {
@@ -41,130 +53,74 @@ impl Trace<{ EventType::Scope }>
             header,
             args,
         } = self.info;
-
-        let dur = unsafe { self.addition.end }.duration_since(self.start).as_micros();
-
-        serde_json::json!({
+        
+        let mut ret = serde_json::json!({
             "name": name,
             "cat": category,
             "pid": header,
             "tid": self.thread_id.as_u64(),
-            "ph": EventType::Scope.code(),
+            "ph": Self::code(),
             "ts": time_stamp,
             "args": args,
-            "dur": dur
-        })
-    }
-}
-
-impl Trace<{ EventType::Counter }>
-{
-    fn json_format(&self, zero: TimePoint) -> Value
-    {
-        let time_stamp = self.start.duration_since(zero).as_micros();
-        let &TraceInfo {
-            name,
-            category,
-            header,
-            args,
-        } = self.info;
-
-        let (i, f) = unsafe { self.addition.int_float };
-        let mut counter = serde_json::json!({
-            "Int": i,
-            "Float": f,
         });
 
-        if !args.is_empty()
+        match TYPE
         {
-            if let Some(valid_json) = serde_json::json!(args).as_object_mut()
+            EventType::Scope => 
             {
-                counter.as_object_mut().unwrap().append(valid_json);
-            }
-            else
+                let dur = unsafe { self.addition.end }.duration_since(self.start).as_micros();
+                ret["dur"] = serde_json::json!(dur);
+            },
+            EventType::Counter => 
             {
-                let mut extra_args = serde_json::json!({"args": args});
-                counter.as_object_mut().unwrap().append(extra_args.as_object_mut().unwrap());
-            }
-        }
+                let args = &mut ret["args"];
+                let value = unsafe { &self.addition.value }.as_number();
+                let mut extra_args = std::mem::replace(args, serde_json::json!({
+                    name: value,
+                }));
 
-        serde_json::json!({
-            "name": name,
-            "cat": category,
-            "pid": header,
-            "tid": self.thread_id.as_u64(),
-            "ph": EventType::Counter.code(),
-            "ts": time_stamp,
-            "args": counter,
-        })
+                if let Some(valid_map) = extra_args.as_object_mut()
+                {
+                    args.as_object_mut().unwrap().append(valid_map);
+                }
+                else if !extra_args.is_null()
+                {
+                    args["args"] = extra_args;
+                }
+            },
+            EventType::Instant => 
+            {
+                let scope_size = unsafe { self.addition.scope_size };
+                ret["s"] = serde_json::json!(scope_size.code());
+            },
+        }
+        
+        ret
     }
 }
 
-impl Trace<{ EventType::Instant }>
+impl Value
 {
-    fn json_format(&self, zero: TimePoint) -> Value
+    fn as_number(self) -> Number
     {
-        let time_stamp = self.start.duration_since(zero).as_micros();
-        let &TraceInfo {
-            name,
-            category,
-            header,
-            args,
-        } = self.info;
-
-        let scope_size = unsafe { self.addition.scope_size };
-
-        serde_json::json!({
-            "name": name,
-            "cat": category,
-            "pid": header,
-            "tid": self.thread_id.as_u64(),
-            "ph": EventType::Instant.code(),
-            "ts": time_stamp,
-            "s": scope_size.code(),
-            "args": args,
-        })
+        use Value::*;
+        match self {
+            UInt(uint) => Number::from_u128(uint.into()),
+            IInt(iint) => Number::from_i128(iint.into()),
+            Float(float) => Number::from_f64(float),
+        }.unwrap()
     }
 }
-
-/*
-impl Trace {
-    fn cmp_start(&self, other: &Self) -> Ordering
-    {
-    self.start.cmp(&other.start)
-        match self.start.cmp(&other.start)
-        {
-        Ordering::Equal => other.end.cmp(&self.end),
-            o => o,
-        }
-    }
-}
-*/
 
 impl MetaTrace
 {
-    fn json_format(&self) -> Value
+    fn json_format(&self) -> JsonValue
     {
+        let (pid, tid, name) = 
         match self
         {
-            MetaTrace::ThreadName(pid, tid, name) => serde_json::json!({
-                "args": {"name": name},
-                "cat": "__metadata",
-                "name": "thread_name",
-                "ph": "M",
-                "pid": pid,
-                "tid": tid,
-                "ts": 0,
-            }),
-            MetaTrace::ProcessName(pid, name) => serde_json::json!({
-                "args": {"name": name},
-                "cat": "__metadata",
-                "name": "process_name",
-                "ph": "M",
-                "pid": pid,
-                "tid": 0,
-                "ts": 0,
-            }),
+            MetaTrace::ProcessName(pid, name) => (pid, 0_u64, name),
+            MetaTrace::ThreadName(pid, tid, name) => (pid, tid.get(), name),
             /* Not in doc
             MetaEvent::ProcessUptimeSeconds(pid, uptime) => serde_json::json!({
                 "args": {"uptime": uptime},
@@ -186,6 +142,16 @@ impl MetaTrace
                 "tid": 0,
                 "ts": time,
             }),*/
-        }
+        };
+
+        serde_json::json!({
+            "args": {"name": name},
+            "cat": "__metadata",
+            "name": "thread_name",
+            "ph": "M",
+            "pid": pid,
+            "tid": tid,
+            "ts": 0,
+        })
     }
 }

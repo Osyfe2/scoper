@@ -20,7 +20,7 @@ macro_rules! record_scope {
 
 #[macro_export]
 macro_rules! record_value {
-    ($header: expr, $name: expr, $int: expr, $float: expr) => {
+    ($header: expr, $name: expr, $value: expr) => {
         {
             static TRACE_COUNTER_INFO: $crate::TraceInfo = $crate::TraceInfo {
                 name: $name,
@@ -28,7 +28,7 @@ macro_rules! record_value {
                 header: $header,
                 args: "",
             };
-            $crate::record_custom_value(&TRACE_COUNTER_INFO, ($int, $float));
+            $crate::record_custom_value(&TRACE_COUNTER_INFO, $value);
         }
     };
     /*

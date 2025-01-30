@@ -8,21 +8,21 @@ pub enum EventType
     //End,           
     Instant,
 
-    AsyncStart,    
-    AsyncProgress, 
-    AsyncFinish,
+    //AsyncStart,    
+    //AsyncProgress, 
+    //AsyncFinish,
     
-    FlowStart,    
-    FlowProgress, 
-    FlowFinish,
+    //FlowStart,    
+    //FlowProgress, 
+    //FlowFinish,
     
-    ObjectCreated,    
-    ObjectSnapshot, 
-    ObjectDestroyed,
+    //ObjectCreated,    
+    //ObjectSnapshot, 
+    //ObjectDestroyed,
     
     Counter,
     //Sample, //deprecated
-    ClockSync,
+    //ClockSync,
     //Mark, too similar to Instant
     //MemoryDumpGlobal,
     //MemoryDumpProcess,
@@ -44,21 +44,21 @@ impl EventType
             //End => 'E',
             Instant => 'i',
 
-            AsyncStart => 'b',
-            AsyncProgress => 'n',
-            AsyncFinish => 'e',
+            //AsyncStart => 'b',
+            //AsyncProgress => 'n',
+            //AsyncFinish => 'e',
 
-            FlowStart => 's',
-            FlowProgress => 't',
-            FlowFinish => 'f',
+            //FlowStart => 's',
+            //FlowProgress => 't',
+            //FlowFinish => 'f',
 
-            ObjectCreated => 'N',
-            ObjectSnapshot => 'O',
-            ObjectDestroyed => 'D',
+            //ObjectCreated => 'N',
+            //ObjectSnapshot => 'O',
+            //ObjectDestroyed => 'D',
             
             Counter => 'C',
             //in source Sample => P
-            ClockSync => 'c',
+            //ClockSync => 'c',
             //Mark => 'R',
             //in doc ContextStart => '(',
             //in doc ContextEnd => ')',

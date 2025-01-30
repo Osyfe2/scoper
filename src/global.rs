@@ -3,20 +3,39 @@ use std::{
     thread::current,
 };
 
-use super::{EventType, Info, InstantScopeSize, TimePoint, Trace, TraceAddition};
+use super::{Value, EventType, Info, InstantScopeSize, TimePoint, Trace, TraceAddition};
 
 type Traces<const TYPE: EventType> = Vec<Trace<TYPE>>;
-static SCOPES: LazyLock<Mutex<Traces<{ EventType::Scope }>>> = LazyLock::new(const { || Mutex::new(Traces::new()) });
-static COUNTERS: LazyLock<Mutex<Traces<{ EventType::Counter }>>> = LazyLock::new(const { || Mutex::new(Traces::new()) });
-static INSTANCES: LazyLock<Mutex<Traces<{ EventType::Instant }>>> = LazyLock::new(const { || Mutex::new(Traces::new()) });
 
-fn access_scopes<'a>() -> MutexGuard<'a, Traces<{ EventType::Scope }>> { SCOPES.lock().expect("Could not get access") }
-fn access_counters<'a>() -> MutexGuard<'a, Traces<{ EventType::Counter }>> { COUNTERS.lock().expect("Could not get access") }
-fn access_instances<'a>() -> MutexGuard<'a, Traces<{ EventType::Instant }>> { INSTANCES.lock().expect("Could not get access") }
+struct Buffer<const TYPE: EventType>
+{
+    buffer: LazyLock<Mutex<Traces<{ TYPE }>>>
+}
 
-pub(super) fn flush_traces() -> Traces<{ EventType::Scope }> { std::mem::take(&mut access_scopes()) }
-pub(super) fn flush_counters() -> Traces<{ EventType::Counter }> { std::mem::take(&mut access_counters()) }
-pub(super) fn flush_instances() -> Traces<{ EventType::Instant }> { std::mem::take(&mut access_instances()) }
+impl <const TYPE: EventType> Buffer<TYPE>
+{
+    const fn init() -> Self
+    {
+        Self{
+            buffer: LazyLock::new(const { || Mutex::new(Traces::new()) })
+        }
+    }
+
+    fn access<'a>(&'a self) -> MutexGuard<'a, Traces<{ TYPE }>>{
+        self.buffer.lock().expect("Could not get access") 
+    }
+
+    fn push(&self, trace: Trace<{TYPE}>)
+    {
+        self.access().push(trace);
+    }
+
+    pub(super) fn flush(&self) -> Traces<{ TYPE }> { std::mem::take(&mut self.access()) }
+}
+
+static SCOPES: Buffer<{EventType::Scope}> = Buffer::init();
+static COUNTERS: Buffer<{EventType::Counter}> = Buffer::init();
+static INSTANCES: Buffer<{EventType::Instant}> = Buffer::init();
 
 impl<const TYPE: EventType> Trace<TYPE>
 {
@@ -35,15 +54,31 @@ impl<const TYPE: EventType> Trace<TYPE>
 
 pub fn record_custom_scope(info: Info, start: TimePoint, end: TimePoint)
 {
-    access_scopes().push(Trace::build(info, start, TraceAddition { end }));
+    SCOPES.push(Trace::build(info, start, TraceAddition { end }));
 }
 
-pub fn record_custom_value(info: Info, int_float: (i64, f64))
+pub fn record_custom_value<V: Into<Value>>(info: Info, value: V)
 {
-    access_counters().push(Trace::build_now(info, TraceAddition { int_float }));
+    let value = value.into();
+    COUNTERS.push(Trace::build_now(info, TraceAddition { value }));
 }
 
 pub fn record_custom_instant(info: Info, scope_size: InstantScopeSize)
 {
-    access_instances().push(Trace::build_now(info, TraceAddition { scope_size }));
+    INSTANCES.push(Trace::build_now(info, TraceAddition { scope_size }));
+}
+
+pub(super) enum TaggedTrace
+{
+    Scope(Trace<{EventType::Scope}>),
+    Counter(Trace<{EventType::Counter}>),
+    Instant(Trace<{EventType::Instant}>),
+}
+
+pub(super) fn flush_buffers() -> impl Iterator<Item = TaggedTrace>
+{
+    use TaggedTrace::*;
+    SCOPES.flush().into_iter().map(|t| Scope(t))
+    .chain(COUNTERS.flush().into_iter().map(|t| Counter(t)))
+    .chain(INSTANCES.flush().into_iter().map(|t| Instant(t)))
 }
