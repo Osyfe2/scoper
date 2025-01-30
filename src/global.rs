@@ -1,48 +1,6 @@
-use std::{
-    sync::{LazyLock, Mutex, MutexGuard},
-    thread::current,
-};
+use std::sync::{LazyLock, Mutex, MutexGuard};
 
-use crate::{BaseInfo, CounterData, Info, InstantData, InstantScopeSize, ScopeData, TaggedTrace, TimePoint, Value};
-
-struct Buffer<Data>
-{
-    buffer: LazyLock<Mutex<Vec<Data>>>,
-}
-
-impl<Data> Buffer<Data>
-{
-    const fn init() -> Self
-    {
-        Self {
-            buffer: LazyLock::new(const { || Mutex::new(Vec::new()) }),
-        }
-    }
-
-    fn access<'a>(&'a self) -> MutexGuard<'a, Vec<Data>> { self.buffer.lock().expect("Could not get access") }
-
-    fn push(&self, value: Data) { self.access().push(value); }
-
-    fn flush(&self) -> Vec<Data> { std::mem::take(&mut self.access()) }
-}
-
-static SCOPES: Buffer<ScopeData> = Buffer::init();
-static COUNTERS: Buffer<CounterData> = Buffer::init();
-static INSTANCES: Buffer<InstantData> = Buffer::init();
-
-impl BaseInfo
-{
-    fn build(info: Info, start: TimePoint) -> Self
-    {
-        Self {
-            thread_id: current().id(),
-            info,
-            start,
-        }
-    }
-
-    fn build_now(info: Info) -> Self { Self::build(info, TimePoint::now()) }
-}
+use crate::{types::{BaseInfo, CounterData, InstantData, ScopeData, TaggedTrace, Value}, Info, InstantScopeSize, TimePoint};
 
 pub fn record_custom_scope(info: Info, start: TimePoint, end: TimePoint)
 {
@@ -78,4 +36,29 @@ pub(super) fn flush_buffers() -> impl Iterator<Item = TaggedTrace>
         .map(|t| Scope(t))
         .chain(COUNTERS.flush().into_iter().map(|t| Counter(t)))
         .chain(INSTANCES.flush().into_iter().map(|t| Instant(t)))
+}
+
+static SCOPES: Buffer<ScopeData> = Buffer::init();
+static COUNTERS: Buffer<CounterData> = Buffer::init();
+static INSTANCES: Buffer<InstantData> = Buffer::init();
+
+struct Buffer<Data>
+{
+    buffer: LazyLock<Mutex<Vec<Data>>>,
+}
+
+impl<Data> Buffer<Data>
+{
+    const fn init() -> Self
+    {
+        Self {
+            buffer: LazyLock::new(const { || Mutex::new(Vec::new()) }),
+        }
+    }
+
+    fn access<'a>(&'a self) -> MutexGuard<'a, Vec<Data>> { self.buffer.lock().expect("Could not get access") }
+
+    fn push(&self, value: Data) { self.access().push(value); }
+
+    fn flush(&self) -> Vec<Data> { std::mem::take(&mut self.access()) }
 }

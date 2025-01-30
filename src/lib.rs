@@ -2,20 +2,21 @@
 #![feature(adt_const_params)]
 #![warn(clippy::all, clippy::perf, clippy::pedantic)]
 
-use std::{num::NonZero, thread::ThreadId};
+use std::num::NonZero;
 
-mod eventtypes;
 mod global;
 mod json;
 mod macro_rules;
 mod recordscope;
-mod scopes;
-mod value;
+mod eventtypes;
 
-pub use global::{record_custom_instant, record_custom_scope, record_custom_value};
+mod types;
+
 pub use recordscope::RecordScope;
-pub use scopes::Scope;
-pub use value::Value;
+pub use global::{record_custom_instant, record_custom_scope, record_custom_value};
+pub use types::Scope;
+pub use types::InstantScopeSize;
+pub type Info = &'static TraceInfo<'static>;
 
 pub mod macros
 {
@@ -24,64 +25,6 @@ pub mod macros
     pub use crate::{record_instant, record_scope, record_value};
 }
 
-pub(crate) use std::time::Instant as TimePoint;
-
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Ord, Eq)]
-pub enum InstantScopeSize
-{
-    Thread,
-    Process,
-    Global,
-}
-
-impl InstantScopeSize
-{
-    #[must_use]
-    pub const fn code(self) -> char
-    {
-        match self
-        {
-            InstantScopeSize::Thread => 't',
-            InstantScopeSize::Process => 'p',
-            InstantScopeSize::Global => 'g',
-        }
-    }
-}
-
-enum TaggedTrace
-{
-    Scope(ScopeData),
-    Counter(CounterData),
-    Instant(InstantData),
-}
-
-struct BaseInfo
-{
-    thread_id: ThreadId,     //All trace types
-    start: TimePoint,        //All trace types
-    info: Info,              //static info
-}
-
-struct ScopeData
-{
-    base: BaseInfo,
-    end: TimePoint,
-}
-
-struct CounterData
-{
-    base: BaseInfo,
-    value: Value,
-}
-
-struct InstantData
-{
-    base: BaseInfo,
-    scope_size: InstantScopeSize,
-}
-
-pub type Info = &'static TraceInfo<'static>;
-
 pub struct TraceInfo<'a>
 {
     pub name: &'a str,
@@ -89,6 +32,9 @@ pub struct TraceInfo<'a>
     pub header: &'a str, //(PID)
     pub args: &'a str,
 }
+
+use std::time::Instant as TimePoint;
+
 
 type Pid = &'static str;
 type Tid = NonZero<u64>;
@@ -99,10 +45,10 @@ pub enum MetaTrace
     ProcessName(Pid, String), //__metadata M
     //ProcessSortIndex(Pid, usize),        //__metadata M todo!
     //ProcessLabels(Pid, String),        //__metadata M todo!
-    ThreadName(Pid, Tid, String), // __metadata M
-    //ThreadSortIndex(Pid, Tid, usize),        //__metadata M todo!
-    //ProcessUptimeSeconds(Pid, u128), //__metadata M Not in the doc
-    //ActiveProcesses(Vec<Pid>, u128), //__metadata I s:g Not in the doc
+    ThreadName(Pid, Tid, String), /* __metadata M
+                                   *ThreadSortIndex(Pid, Tid, usize),        //__metadata M todo!
+                                   *ProcessUptimeSeconds(Pid, u128), //__metadata M Not in the doc
+                                   *ActiveProcesses(Vec<Pid>, u128), //__metadata I s:g Not in the doc */
 }
 
 #[cfg(test)]
@@ -170,6 +116,17 @@ mod test
     fn threads_test()
     {
         let mut record = RecordScope::start(Path::new("results/threads_test.json"));
+        record
+            .add_meta_data("test".to_string(), &String::from("SomeExtraInfoHere"))
+            .ok();
+
+        {
+            record_scope!("Some setup");
+            wait_30_ms();
+        }
+
+        record.set_starting_time();
+        
         std::thread::scope(|s| {
             s.spawn(|| {
                 for _ in 0..10

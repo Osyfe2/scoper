@@ -1,3 +1,12 @@
+use super::BaseInfo;
+
+
+pub(crate) struct CounterData
+{
+    pub(crate) base: BaseInfo,
+    pub(crate) value: Value,
+}
+
 #[derive(Clone, Copy)]
 pub enum Value
 {

@@ -26,7 +26,13 @@ impl RecordScope
             record_start: TimePoint::now(),
             meta_data: json::Map::default(),
             meta_traces: Vec::default(),
+            //section: "",
         }
+    }
+
+    pub fn set_starting_time(&mut self)
+    {
+        self.record_start = TimePoint::now()
     }
 }
 
@@ -42,7 +48,7 @@ impl RecordScope
         //TODO allow appending as different process instead of overwriting
         let writer = &mut BufWriter::new(File::create(&self.path)?);
         let data = self.fetch_data();
-        serde_json::to_writer(writer, &data)?;
+        json::to_writer(writer, &data)?;
 
         Ok(())
     }
@@ -58,15 +64,13 @@ impl RecordScope
         Ok(self.meta_data.insert(name, json))
     }
 
-    fn add_meta_trace(&mut self, meta_trace: MetaTrace) { self.meta_traces.push(meta_trace); }
-
     pub fn name_thread(&mut self, thread_id: ThreadId, header: Pid, name: String)
     {
-        self.add_meta_trace(MetaTrace::ThreadName(header, thread_id.as_u64(), name));
+        self.meta_traces.push(MetaTrace::ThreadName(header, thread_id.as_u64(), name));
     }
 
     pub fn final_header(&mut self, old_header: Pid, new_header: String)
     {
-        self.add_meta_trace(MetaTrace::ProcessName(old_header, new_header));
+        self.meta_traces.push(MetaTrace::ProcessName(old_header, new_header));
     }
 }

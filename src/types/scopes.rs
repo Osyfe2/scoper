@@ -1,11 +1,19 @@
 use std::cell::RefCell;
 
-use crate::{Info, TimePoint, record_custom_scope};
+use crate::{record_custom_scope, Info, TimePoint};
+
+use super::BaseInfo;
 
 type OpenScopes = Vec<TimePoint>;
 
 thread_local! {
     static OPEN_SCOPES: RefCell<OpenScopes> = RefCell::default();
+}
+
+pub(crate) struct ScopeData
+{
+    pub base: BaseInfo,
+    pub end: TimePoint,
 }
 
 pub struct Scope

@@ -1,7 +1,7 @@
 use std::marker::ConstParamTy;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, ConstParamTy)]
-pub(super) enum EventType
+pub(crate) enum EventType
 {
     Scope,
     //Begin, //Scope is sufficient
