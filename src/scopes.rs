@@ -59,5 +59,5 @@ fn pop_scope_opening_time() -> TimePoint
 pub(super) fn close_scope(Scope { info }: &Scope)
 {
     let start = pop_scope_opening_time();
-    record_custom_scope(info, start, TimePoint::now());
+    record_custom_scope(info, start, TimePoint::now()); //might require a check to ensure the ends are sorted
 }

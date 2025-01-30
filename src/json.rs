@@ -9,7 +9,7 @@ impl RecordScope
         let traces = global::flush_buffers();
 
         //Not needed but might be faster on load
-        //Needed per thread but should hold -> Testing
+        //Needed per thread -> but should hold -> Testing
         //traces.sort_by(Trace::cmp_start);
 
         let mut data = Map::new();
