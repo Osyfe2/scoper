@@ -1,7 +1,7 @@
-use serde_json::{Map, Number, Value as JsonValue};
+use serde_json::{json, Map, Number, Value as JsonValue};
 
 use crate::{
-    EventType, MetaTrace, RecordScope, TaggedTrace, TimePoint, Trace, TraceInfo, Value,
+    eventtypes::EventType, MetaTrace, RecordScope, TaggedTrace, TimePoint, TraceInfo, Value,
     global::{self},
 };
 
@@ -9,21 +9,22 @@ impl RecordScope
 {
     pub(crate) fn fetch_data(&mut self) -> Map<String, JsonValue>
     {
-        let traces = global::flush_buffers();
+        let traces = global::flush_buffers().map(|t| t.json_format(self.record_start));
 
-        //Not needed but might be faster on load
-        //Needed per thread -> but should hold -> Testing
+        //Sorting not needed but might be faster on load
+        //But needed per thread -> should hold without sort -> Testing
         //traces.sort_by(Trace::cmp_start);
 
-        let mut data = Map::new();
         let traces = self
-            .meta_traces
-            .iter()
-            .map(MetaTrace::json_format)
-            .chain(traces.map(|t| t.json_format(self.record_start)))
-            .collect();
-        data.insert("traceEvents".to_string(), JsonValue::Array(traces));
-        data.insert("displayTimeUnit".to_string(), JsonValue::String("ms".to_string())); //ns allowed as well
+        .meta_traces
+        .iter()
+        .map(MetaTrace::json_format)
+        .chain(traces)
+        .collect();
+
+        let mut data = Map::new();
+        data["traceEvents"] = JsonValue::Array(traces);
+        data["displayTimeUnit"] = json!("ms"); //ns allowed as well
         data.append(&mut self.meta_data);
         data
     }
@@ -31,55 +32,56 @@ impl RecordScope
 
 impl TaggedTrace
 {
-    fn json_format(&self, zero: TimePoint) -> JsonValue
-    {
-        match self
-        {
-            TaggedTrace::Scope(trace) => trace.json_format(zero),
-            TaggedTrace::Counter(trace) => trace.json_format(zero),
-            TaggedTrace::Instant(trace) => trace.json_format(zero),
+    fn code(&self) -> char { 
+        match self {
+            TaggedTrace::Scope(_) => EventType::Scope.code(),
+            TaggedTrace::Counter(_) => EventType::Counter.code(),
+            TaggedTrace::Instant(_) => EventType::Instant.code(),
         }
-    }
-}
-
-impl<const TYPE: EventType> Trace<TYPE>
-{
-    fn code() -> char { TYPE.code() }
+     }
 
     fn json_format(&self, zero: TimePoint) -> JsonValue
     {
-        let time_stamp = self.start.duration_since(zero).as_micros();
+        use TaggedTrace::*;
+        let base = match self
+        {
+            Scope(trace) => &trace.base,
+            Counter(trace) => &trace.base,
+            Instant(trace) => &trace.base,
+        };
+
+        let time_stamp = base.start.duration_since(zero).as_micros();
         let &TraceInfo {
             name,
             category,
             header,
             args,
-        } = self.info;
+        } = base.info;
 
-        let mut ret = serde_json::json!({
+        let mut ret = json!({
             "name": name,
             "cat": category,
             "pid": header,
-            "tid": self.thread_id.as_u64(),
-            "ph": Self::code(),
+            "tid": base.thread_id.as_u64(),
+            "ph": self.code(),
             "ts": time_stamp,
             "args": args,
         });
 
-        match TYPE
+        match self
         {
-            EventType::Scope =>
+            Scope(scope) =>
             {
-                let dur = unsafe { self.addition.end }.duration_since(self.start).as_micros();
-                ret["dur"] = serde_json::json!(dur);
+                let dur = scope.end.duration_since(scope.base.start).as_micros();
+                ret["dur"] = json!(dur);
             },
-            EventType::Counter =>
+            Counter(counter) =>
             {
                 let args = &mut ret["args"];
-                let value = unsafe { &self.addition.value }.as_number();
+                let value = counter.value.as_number();
                 let mut extra_args = std::mem::replace(
                     args,
-                    serde_json::json!({
+                    json!({
                         name: value,
                     }),
                 );
@@ -93,10 +95,9 @@ impl<const TYPE: EventType> Trace<TYPE>
                     args["args"] = extra_args;
                 }
             },
-            EventType::Instant =>
+            Instant(instant) =>
             {
-                let scope_size = unsafe { self.addition.scope_size };
-                ret["s"] = serde_json::json!(scope_size.code());
+                ret["s"] = json!(instant.scope_size.code());
             },
         }
 

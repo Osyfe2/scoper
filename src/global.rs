@@ -3,64 +3,70 @@ use std::{
     thread::current,
 };
 
-use crate::{EventType, Info, InstantScopeSize, TaggedTrace, TimePoint, Trace, TraceAddition, Value};
+use crate::{BaseInfo, CounterData, Info, InstantData, InstantScopeSize, ScopeData, TaggedTrace, TimePoint, Value};
 
-type Traces<const TYPE: EventType> = Vec<Trace<TYPE>>;
-
-struct Buffer<const TYPE: EventType>
+struct Buffer<Data>
 {
-    buffer: LazyLock<Mutex<Traces<{ TYPE }>>>,
+    buffer: LazyLock<Mutex<Vec<Data>>>,
 }
 
-impl<const TYPE: EventType> Buffer<TYPE>
+impl<Data> Buffer<Data>
 {
     const fn init() -> Self
     {
         Self {
-            buffer: LazyLock::new(const { || Mutex::new(Traces::new()) }),
+            buffer: LazyLock::new(const { || Mutex::new(Vec::new()) }),
         }
     }
 
-    fn access<'a>(&'a self) -> MutexGuard<'a, Traces<{ TYPE }>> { self.buffer.lock().expect("Could not get access") }
+    fn access<'a>(&'a self) -> MutexGuard<'a, Vec<Data>> { self.buffer.lock().expect("Could not get access") }
 
-    fn push(&self, trace: Trace<{ TYPE }>) { self.access().push(trace); }
+    fn push(&self, value: Data) { self.access().push(value); }
 
-    fn flush(&self) -> Traces<{ TYPE }> { std::mem::take(&mut self.access()) }
+    fn flush(&self) -> Vec<Data> { std::mem::take(&mut self.access()) }
 }
 
-static SCOPES: Buffer<{ EventType::Scope }> = Buffer::init();
-static COUNTERS: Buffer<{ EventType::Counter }> = Buffer::init();
-static INSTANCES: Buffer<{ EventType::Instant }> = Buffer::init();
+static SCOPES: Buffer<ScopeData> = Buffer::init();
+static COUNTERS: Buffer<CounterData> = Buffer::init();
+static INSTANCES: Buffer<InstantData> = Buffer::init();
 
-impl<const TYPE: EventType> Trace<TYPE>
+impl BaseInfo
 {
-    fn build(info: Info, start: TimePoint, addition: TraceAddition) -> Self
+    fn build(info: Info, start: TimePoint) -> Self
     {
         Self {
             thread_id: current().id(),
             info,
             start,
-            addition,
         }
     }
 
-    fn build_now(info: Info, addition: TraceAddition) -> Self { Self::build(info, TimePoint::now(), addition) }
+    fn build_now(info: Info) -> Self { Self::build(info, TimePoint::now()) }
 }
 
 pub fn record_custom_scope(info: Info, start: TimePoint, end: TimePoint)
 {
-    SCOPES.push(Trace::build(info, start, TraceAddition { end }));
+    SCOPES.push(ScopeData {
+        base: BaseInfo::build(info, start),
+        end,
+    });
 }
 
 pub fn record_custom_value<V: Into<Value>>(info: Info, value: V)
 {
     let value = value.into();
-    COUNTERS.push(Trace::build_now(info, TraceAddition { value }));
+    COUNTERS.push(CounterData {
+        base: BaseInfo::build_now(info),
+        value,
+    });
 }
 
 pub fn record_custom_instant(info: Info, scope_size: InstantScopeSize)
 {
-    INSTANCES.push(Trace::build_now(info, TraceAddition { scope_size }));
+    INSTANCES.push(InstantData {
+        base: BaseInfo::build_now(info),
+        scope_size,
+    });
 }
 
 pub(super) fn flush_buffers() -> impl Iterator<Item = TaggedTrace>

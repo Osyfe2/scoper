@@ -1,7 +1,7 @@
 use std::marker::ConstParamTy;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, ConstParamTy)]
-pub enum EventType
+pub(super) enum EventType
 {
     Scope,
     //Begin, //Scope is sufficient
@@ -32,7 +32,7 @@ pub enum EventType
 impl EventType
 {
     #[must_use]
-    pub fn code(self) -> char
+    pub const fn code(self) -> char
     {
         #[allow(clippy::enum_glob_use)]
         use EventType::*;

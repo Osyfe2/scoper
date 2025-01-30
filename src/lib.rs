@@ -4,8 +4,6 @@
 
 use std::{num::NonZero, thread::ThreadId};
 
-use eventtypes::EventType;
-
 mod eventtypes;
 mod global;
 mod json;
@@ -39,7 +37,7 @@ pub enum InstantScopeSize
 impl InstantScopeSize
 {
     #[must_use]
-    pub fn code(self) -> char
+    pub const fn code(self) -> char
     {
         match self
         {
@@ -52,17 +50,34 @@ impl InstantScopeSize
 
 enum TaggedTrace
 {
-    Scope(Trace<{ EventType::Scope }>),
-    Counter(Trace<{ EventType::Counter }>),
-    Instant(Trace<{ EventType::Instant }>),
+    Scope(ScopeData),
+    Counter(CounterData),
+    Instant(InstantData),
 }
 
-struct Trace<const TYPE: EventType>
+struct BaseInfo
 {
     thread_id: ThreadId,     //All trace types
     start: TimePoint,        //All trace types
     info: Info,              //static info
-    addition: TraceAddition, //non static data
+}
+
+struct ScopeData
+{
+    base: BaseInfo,
+    end: TimePoint,
+}
+
+struct CounterData
+{
+    base: BaseInfo,
+    value: Value,
+}
+
+struct InstantData
+{
+    base: BaseInfo,
+    scope_size: InstantScopeSize,
 }
 
 pub type Info = &'static TraceInfo<'static>;
@@ -73,13 +88,6 @@ pub struct TraceInfo<'a>
     pub category: &'a str,
     pub header: &'a str, //(PID)
     pub args: &'a str,
-}
-
-union TraceAddition
-{
-    end: TimePoint,
-    scope_size: InstantScopeSize,
-    value: Value,
 }
 
 type Pid = &'static str;
