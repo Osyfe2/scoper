@@ -1,7 +1,8 @@
 use std::{
     fs::File,
     io::BufWriter,
-    path::{Path, PathBuf}, thread::ThreadId,
+    path::{Path, PathBuf},
+    thread::ThreadId,
 };
 
 use serde_json as json;
@@ -39,7 +40,7 @@ impl RecordScope
     pub(super) fn write(&mut self) -> std::io::Result<()>
     {
         //TODO allow appending as different process instead of overwriting
-        let writer = &mut BufWriter::new(File::create(&self.path)?); 
+        let writer = &mut BufWriter::new(File::create(&self.path)?);
         let data = self.fetch_data();
         serde_json::to_writer(writer, &data)?;
 

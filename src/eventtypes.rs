@@ -3,23 +3,22 @@ use std::marker::ConstParamTy;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, ConstParamTy)]
 pub enum EventType
 {
-    Scope, 
+    Scope,
     //Begin, //Scope is sufficient
-    //End,           
+    //End,
     Instant,
 
-    //AsyncStart,    
-    //AsyncProgress, 
+    //AsyncStart,
+    //AsyncProgress,
     //AsyncFinish,
-    
-    //FlowStart,    
-    //FlowProgress, 
+
+    //FlowStart,
+    //FlowProgress,
     //FlowFinish,
-    
-    //ObjectCreated,    
-    //ObjectSnapshot, 
+
+    //ObjectCreated,
+    //ObjectSnapshot,
     //ObjectDestroyed,
-    
     Counter,
     //Sample, //deprecated
     //ClockSync,
@@ -55,7 +54,6 @@ impl EventType
             //ObjectCreated => 'N',
             //ObjectSnapshot => 'O',
             //ObjectDestroyed => 'D',
-            
             Counter => 'C',
             //in source Sample => P
             //ClockSync => 'c',

@@ -7,17 +7,17 @@ use std::{num::NonZero, thread::ThreadId};
 use eventtypes::EventType;
 
 mod eventtypes;
+mod global;
 mod json;
 mod macro_rules;
 mod recordscope;
-mod global;
 mod scopes;
 mod value;
 
+pub use global::{record_custom_instant, record_custom_scope, record_custom_value};
 pub use recordscope::RecordScope;
 pub use scopes::Scope;
 pub use value::Value;
-pub use global::{record_custom_instant, record_custom_value, record_custom_scope};
 
 pub mod macros
 {
@@ -50,6 +50,12 @@ impl InstantScopeSize
     }
 }
 
+enum TaggedTrace
+{
+    Scope(Trace<{ EventType::Scope }>),
+    Counter(Trace<{ EventType::Counter }>),
+    Instant(Trace<{ EventType::Instant }>),
+}
 
 struct Trace<const TYPE: EventType>
 {
@@ -96,10 +102,10 @@ mod test
 {
     use std::{path::Path, thread::sleep, time::Duration};
 
-    use crate::{macros::*, record_custom_value, InstantScopeSize, RecordScope};
+    use crate::{InstantScopeSize, RecordScope, macros::*, record_custom_value};
     fn wait_30_ms()
     {
-        use crate::{Scope, TraceInfo, Info};
+        use crate::{Info, Scope, TraceInfo};
         static SCOPE_INFO: Info = &TraceInfo {
             //event_typ: EventType::Scope,
             name: "30 Millis",

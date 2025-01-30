@@ -1,6 +1,6 @@
 use std::cell::RefCell;
 
-use crate::{record_custom_scope, Info, TimePoint};
+use crate::{Info, TimePoint, record_custom_scope};
 
 type OpenScopes = Vec<TimePoint>;
 
@@ -19,9 +19,7 @@ impl Scope
     pub fn start(info: Info) -> Self
     {
         open_scope();
-        Self {
-            info,
-        }
+        Self { info }
     }
 }
 
