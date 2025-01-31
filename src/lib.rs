@@ -20,6 +20,13 @@ pub mod macros
     pub use scoper_attr::record;
 
     pub use crate::{record_instant, record_scope, record_value};
+
+    pub mod reexport
+    {
+        pub use const_format::str_replace;
+
+    }
+
 }
 
 pub struct TraceInfo<'a>

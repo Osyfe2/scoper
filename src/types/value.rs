@@ -31,3 +31,17 @@ macro_rules! FromForValue {
 FromForValue!(Float, f64, f32);
 FromForValue!(UInt, u64, u32, u16, u8);
 FromForValue!(IInt, i64, i32, i16, i8);
+
+impl From<usize> for Value
+{
+    fn from(value: usize) -> Self {
+        Value::UInt(value as u64)
+    }
+}
+
+impl From<isize> for Value
+{
+    fn from(value: isize) -> Self {
+        Value::IInt(value as i64)
+    }
+}

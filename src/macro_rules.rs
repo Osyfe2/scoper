@@ -1,11 +1,9 @@
-pub use const_format::str_replace;
-
 #[macro_export]
 macro_rules! record_scope {
     ($header: expr, $name: expr) => {
         static TRACE_SCOPE_INFO: $crate::TraceInfo = $crate::TraceInfo {
             name: $name,
-            category: $crate::macro_rules::str_replace!(::std::module_path!(), "::", ","),
+            category: $crate::macros::reexport::str_replace!(::std::module_path!(), "::", ","),
             header: $header,
             args: "",
         };
@@ -22,7 +20,7 @@ macro_rules! record_value {
     ($header: expr, $name: expr, $value: expr) => {{
         static TRACE_COUNTER_INFO: $crate::TraceInfo = $crate::TraceInfo {
             name: $name,
-            category: $crate::macro_rules::str_replace!(::std::module_path!(), "::", ","),
+            category: $crate::macros::reexport::str_replace!(::std::module_path!(), "::", ","),
             header: $header,
             args: "",
         };
@@ -39,7 +37,7 @@ macro_rules! record_instant {
     ($header: expr, $name: expr, $scope_size: expr) => {{
         static TRACE_INSTANT_INFO: $crate::TraceInfo = $crate::TraceInfo {
             name: $name,
-            category: $crate::macro_rules::str_replace!(::std::module_path!(), "::", ","),
+            category: $crate::macros::reexport::str_replace!(::std::module_path!(), "::", ","),
             header: $header,
             args: "",
         };
