@@ -7,7 +7,7 @@ use std::{
 
 use serde_json as json;
 
-use crate::{MetaTrace, Pid, TimePoint};
+use crate::TimePoint;
 
 pub struct RecordScope
 {
@@ -73,4 +73,19 @@ impl RecordScope
     {
         self.meta_traces.push(MetaTrace::ProcessName(old_header, new_header));
     }
+}
+
+type Pid = &'static str;
+type Tid = std::num::NonZero<u64>;
+
+#[derive(Debug)]
+pub(crate) enum MetaTrace
+{
+    ProcessName(Pid, String), //__metadata M
+    //ProcessSortIndex(Pid, usize),        //__metadata M todo!
+    //ProcessLabels(Pid, String),        //__metadata M todo!
+    ThreadName(Pid, Tid, String), /* __metadata M
+                                   *ThreadSortIndex(Pid, Tid, usize),        //__metadata M todo!
+                                   *ProcessUptimeSeconds(Pid, u128), //__metadata M Not in the doc
+                                   *ActiveProcesses(Vec<Pid>, u128), //__metadata I s:g Not in the doc */
 }

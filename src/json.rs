@@ -1,8 +1,8 @@
 use serde_json::{Map, Number, Value as JsonValue, json};
 
 use crate::{
-    MetaTrace, RecordScope, TimePoint, TraceInfo,
-    eventtypes::EventType,
+    record_scope::MetaTrace, RecordScope, TimePoint, TraceInfo,
+    event_types::EventType,
     global::{self},
     types::{TaggedTrace, Value},
 };

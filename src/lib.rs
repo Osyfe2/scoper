@@ -2,17 +2,14 @@
 #![feature(adt_const_params)]
 #![warn(clippy::all, clippy::perf, clippy::pedantic)]
 
-use std::num::NonZero;
-
 mod global;
 mod json;
 mod macro_rules;
-mod recordscope;
-mod eventtypes;
-
+mod record_scope;
+mod event_types;
 mod types;
 
-pub use recordscope::RecordScope;
+pub use record_scope::RecordScope;
 pub use global::{record_custom_instant, record_custom_scope, record_custom_value};
 pub use types::Scope;
 pub use types::InstantScopeSize;
@@ -34,22 +31,6 @@ pub struct TraceInfo<'a>
 }
 
 use std::time::Instant as TimePoint;
-
-
-type Pid = &'static str;
-type Tid = NonZero<u64>;
-
-#[derive(Debug)]
-pub enum MetaTrace
-{
-    ProcessName(Pid, String), //__metadata M
-    //ProcessSortIndex(Pid, usize),        //__metadata M todo!
-    //ProcessLabels(Pid, String),        //__metadata M todo!
-    ThreadName(Pid, Tid, String), /* __metadata M
-                                   *ThreadSortIndex(Pid, Tid, usize),        //__metadata M todo!
-                                   *ProcessUptimeSeconds(Pid, u128), //__metadata M Not in the doc
-                                   *ActiveProcesses(Vec<Pid>, u128), //__metadata I s:g Not in the doc */
-}
 
 #[cfg(test)]
 mod test
