@@ -7,21 +7,27 @@ pub(crate) struct CounterData
     pub(crate) value: Value,
 }
 
-#[derive(Clone, Copy)]
 pub enum Value
 {
     UInt(u64),
     IInt(i64),
     Float(f64),
+    //Other(Box<String>)
 }
 
 macro_rules! FromForValue {
-    ($version: ident, $( $typ: ty ),+) => {
+    ($version: ident, $typ1:ty, $( $typ:ty),+) => {
+        impl From<$typ1> for Value
+        {
+            fn from(value: $typ1) -> Self {
+                Value::$version(value)
+            }
+        }
         $(
             impl From<$typ> for Value
             {
                 fn from(value: $typ) -> Self {
-                    Value::$version(value.into())
+                    Value::$version(value as $typ1)
                 }
             }
         )+
@@ -29,19 +35,5 @@ macro_rules! FromForValue {
 }
 
 FromForValue!(Float, f64, f32);
-FromForValue!(UInt, u64, u32, u16, u8);
-FromForValue!(IInt, i64, i32, i16, i8);
-
-impl From<usize> for Value
-{
-    fn from(value: usize) -> Self {
-        Value::UInt(value as u64)
-    }
-}
-
-impl From<isize> for Value
-{
-    fn from(value: isize) -> Self {
-        Value::IInt(value as i64)
-    }
-}
+FromForValue!(UInt, u64, u32, u16, u8, usize);
+FromForValue!(IInt, i64, i32, i16, i8, isize);

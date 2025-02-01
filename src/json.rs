@@ -123,19 +123,19 @@ impl TaggedTrace
 
 impl Value
 {
-    fn as_number(self) -> Number
+    fn as_number(&self) -> Number
     {
         use Value::*;
         match self
         {
-            UInt(uint) => Number::from_u128(uint.into()),
-            IInt(iint) => Number::from_i128(iint.into()),
-            Float(float) => Number::from_f64(float),
+            &UInt(uint) => Number::from_u128(uint.into()),
+            &IInt(iint) => Number::from_i128(iint.into()),
+            &Float(float) => Number::from_f64(float),
         }
         .unwrap()
     }
 
-    fn as_args(self) -> JsonValue
+    fn as_args(&self) -> JsonValue
     {
         json!({
             "": self.as_number(),
