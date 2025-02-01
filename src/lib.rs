@@ -65,6 +65,9 @@ mod test
     #[record]
     fn wait_30_ms_macro() { sleep(Duration::from_millis(30)); }
 
+    #[record(custom header)]
+    fn wait_30_ms_custom_header() { sleep(Duration::from_millis(30)); }
+
     #[test]
     fn basic_test_explicit_drop()
     {
@@ -99,6 +102,18 @@ mod test
             record_value!("", "test_value", 0.1 * f64::from(i + 1));
         }
     }
+
+    #[test]
+    fn custom_header_test()
+    {
+        let _record = RecordScope::start(Path::new("results/custom_header_test.json"));
+        for _ in 0_i32..10
+        {
+            wait_30_ms_custom_header();
+            sleep(Duration::from_millis(5));
+        }
+    }
+
 
     #[test]
     fn threads_test()
