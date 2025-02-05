@@ -15,7 +15,7 @@ pub fn record(attr: TokenStream, input: TokenStream) -> TokenStream
     let mut input: syn::ItemFn = syn::parse2(input.into()).expect("Use #[record] only on functions.");
     let name = input.sig.ident.to_string();
 
-    /* //Todo generics
+    /* //TODO generics
     for generics in input.sig.generics.params
     {
         match generics

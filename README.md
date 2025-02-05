@@ -1,9 +1,11 @@
 # Read me
 
+Negative potential consequences of an actionEssential information required for user success
 Build on the chromium tracing tools
 
-You can view the result by opening
-[about://tracing/](about://tracing/) or [https://ui.perfetto.dev/](https://ui.perfetto.dev/)
+> [!IMPORTANT]
+> You can view the result by opening
+> [about://tracing/](about://tracing/) or [https://ui.perfetto.dev/](https://ui.perfetto.dev/)
 
 Should work on atleast all chromium based browsers.
 
@@ -21,7 +23,7 @@ Should work on atleast all chromium based browsers.
 - [ ] compilation flag
 - [ ] procmacro for other expressions
 - [ ] What to do with:
-  - [ ] headers
+  - [ ] headers?
     - [ ] Record header tag (add multiple recording into a single file?)
   - [ ] Value names
 - [ ] Value JsonValue type?
