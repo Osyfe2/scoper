@@ -7,14 +7,41 @@ mod value;
 
 pub use scopes::Scope;
 pub use value::Value;
-pub(super) use scopes::ScopeData;
-pub(super) use value::CounterData;
+pub(super) use scopes::Start;
 
-pub(super) enum TaggedTrace
+pub(super) enum TaggedData
 {
-    Scope(ScopeData),
-    Counter(CounterData),
-    Instant(InstantData),
+    Scope(Start),
+    Counter(Value),
+    Instant(InstantScopeSize),
+}
+
+impl From<Start> for TaggedData {
+    fn from(value: Start) -> Self {
+        Self::Scope(value)
+    }
+}
+
+impl From<Value> for TaggedData {
+    fn from(value: Value) -> Self {
+        Self::Counter(value)
+    }
+}
+
+impl From<InstantScopeSize> for TaggedData {
+    fn from(value: InstantScopeSize) -> Self {
+        Self::Instant(value)
+    }
+}
+
+pub(super) struct Trace<Extra>(pub BaseInfo, pub Extra);
+pub(super) type TaggedTrace = Trace<TaggedData>;
+
+impl<Extra: Into<TaggedData>> Trace<Extra>
+{
+    pub(super) fn tag(self) -> TaggedTrace {
+        Trace(self.0, self.1.into())
+    }
 }
 
 pub(super) struct BaseInfo
@@ -36,12 +63,6 @@ impl BaseInfo
     }
 
     pub(crate) fn build_now(info: Info) -> Self { Self::build(info, TimePoint::now()) }
-}
-
-pub(crate) struct InstantData
-{
-    pub(crate) base: BaseInfo,
-    pub(crate) scope_size: InstantScopeSize,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Ord, Eq)]

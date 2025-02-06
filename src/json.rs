@@ -1,32 +1,30 @@
 use serde_json::{Map, Number, Value as JsonValue, json};
 
 use crate::{
-    record_scope::MetaTrace, RecordScope, TimePoint, TraceInfo,
-    event_types::EventType,
-    global::{self},
-    types::{TaggedTrace, Value},
+    event_types::EventType, global::{self}, record_scope::MetaTrace, types::{TaggedData, TaggedTrace, Trace, Value}, RecordScope, TimePoint, TraceInfo
 };
 
 impl RecordScope
 {
     pub(crate) fn fetch_data(&mut self) -> Map<String, JsonValue>
     {
-        let traces = global::flush_buffers().filter_map(|t| t.json_format(self.record_start));
+        let mut traces: Vec<_> = global::flush_buffers().collect();
 
-        //Sorting not needed but might be faster on load
-        //But needed per thread -> should hold without sort -> Testing
-        //traces.sort_by(Trace::cmp_start);
+        traces.sort_by(TaggedTrace::cmp_start);
 
-        let traces = self.meta_traces.iter().map(MetaTrace::json_format).chain(traces).collect();
+        let traces = traces.iter().filter_map(|t| t.json_format(self.record_start));
 
+        let traces: Vec<_> = self.meta_traces.iter().map(MetaTrace::json_format).chain(traces).collect();
         let mut data = Map::new();
-        data.insert("traceEvents".to_string(), JsonValue::Array(traces));
+        data.insert("traceEvents".to_string(), traces.into());
         data.insert("displayTimeUnit".to_string(), json!("ms")); //ns allowed as well
         data.append(&mut self.meta_data);
+        
         data
     }
 }
 
+#[allow(dead_code)]
 // Viewer do not handle negative well
 fn signed_time(earlier: TimePoint, later: TimePoint) -> i128
 {
@@ -42,64 +40,82 @@ fn signed_time(earlier: TimePoint, later: TimePoint) -> i128
 
 impl TaggedTrace
 {
+    fn start(&self) -> &TimePoint
+    {
+        match &self.1
+        {
+            TaggedData::Scope(start) => &start.0,
+            _ => &self.end(),
+        }
+    }
+
+    fn end(&self) -> &TimePoint
+    {
+        &self.0.time_point
+    }
+
+    fn cmp_start(&self, other: &TaggedTrace) -> std::cmp::Ordering
+    {
+        match self.start().cmp(other.start())
+        {
+            std::cmp::Ordering::Equal => other.end().cmp(self.end()),
+            c => c,
+        }
+    }
+}
+
+impl TaggedTrace
+{
     fn code(&self) -> char
     {
-        match self
+        match self.1
         {
-            TaggedTrace::Scope(_) => EventType::Scope.code(),
-            TaggedTrace::Counter(_) => EventType::Counter.code(),
-            TaggedTrace::Instant(_) => EventType::Instant.code(),
+            TaggedData::Scope(_) => EventType::Scope.code(),
+            TaggedData::Counter(_) => EventType::Counter.code(),
+            TaggedData::Instant(_) => EventType::Instant.code(),
         }
     }
 
     fn json_format(&self, zero: TimePoint) -> Option<JsonValue>
     {
-        use TaggedTrace::*;
-        let base = match self
-        {
-            Scope(trace) => &trace.base,
-            Counter(trace) => &trace.base,
-            Instant(trace) => &trace.base,
-        };
-
         // Viewer do not handle negative well
         //let time_stamp = signed_time(zero, base.start);
-        let time_point = base.time_point.checked_duration_since(zero)?.as_micros();
-        
+        let time_point = self.0.time_point.checked_duration_since(zero)?.as_micros();
+
         let &TraceInfo {
             name,
             category,
             header,
             args,
-        } = base.info;
+        } = self.0.info;
 
         let mut ret = json!({
             "name": name,
             "cat": category,
             "pid": header,
-            "tid": base.thread_id.as_u64(),
+            "tid": self.0.thread_id.as_u64(),
             "ph": self.code(),
             "ts": time_point,
             "args": args,
         });
 
         adjust_specific_atributes(ret.as_object_mut().unwrap(), self, zero);
-        fn adjust_specific_atributes(ret: &mut Map<String, JsonValue>, trace: &TaggedTrace, zero: TimePoint)
+        fn adjust_specific_atributes(ret: &mut Map<String, JsonValue>, Trace(base, tag): &TaggedTrace, zero: TimePoint)
         {
-            match trace
+            use TaggedData::*;
+            match tag
             {
-                Scope(scope) =>
+                Scope(start) =>
                 {
-                    let start = scope.start.duration_since(zero).as_micros();
-                    let dur = scope.base.time_point.duration_since(zero).as_micros() - start;
+                    let start = start.0.duration_since(zero).as_micros();
+                    let dur = base.time_point.duration_since(zero).as_micros() - start;
                     ret["ts"] = json!(start);
                     ret.insert("dur".to_string(), json!(dur));
                 },
-                Counter(counter) =>
+                Counter(value) =>
                 {
                     let args = &mut ret["args"];
-                    let value = counter.value.as_args();
-                    let mut extra_args = std::mem::replace(args, value);
+                    let mut extra_args = std::mem::replace(args, value.as_args());
 
                     if let Some(valid_map) = extra_args.as_object_mut()
                     {
@@ -110,9 +126,9 @@ impl TaggedTrace
                         args["args"] = extra_args;
                     }
                 },
-                Instant(instant) =>
+                Instant(scope_size) =>
                 {
-                    ret.insert("s".to_string(), json!(instant.scope_size.code()));
+                    ret.insert("s".to_string(), json!(scope_size.code()));
                 },
             }
         }

@@ -49,7 +49,6 @@ impl RecordScope
         let writer = &mut BufWriter::new(File::create(&self.path)?);
         let data = self.fetch_data();
         json::to_writer(writer, &data)?;
-
         Ok(())
     }
 

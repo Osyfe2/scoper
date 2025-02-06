@@ -1,46 +1,36 @@
 use std::sync::{LazyLock, Mutex, MutexGuard};
 
-use crate::{types::{BaseInfo, CounterData, InstantData, ScopeData, TaggedTrace, Value}, Info, InstantScopeSize, TimePoint};
+use crate::{
+    Info, TimePoint,
+    types::{BaseInfo, InstantScopeSize, Start, TaggedTrace, Trace, Value},
+};
 
 pub fn record_custom_scope(info: Info, start: TimePoint, end: TimePoint)
 {
-    SCOPES.push(ScopeData {
-        base: BaseInfo::build(info, end),
-        start,
-    });
+    SCOPES.push(Trace(BaseInfo::build(info, end), Start(start)));
 }
 
 pub fn record_custom_value<V: Into<Value>>(info: Info, value: V)
 {
     let value = value.into();
-    COUNTERS.push(CounterData {
-        base: BaseInfo::build_now(info),
-        value,
-    });
+    COUNTERS.push(Trace(BaseInfo::build_now(info), value));
 }
 
-pub fn record_custom_instant(info: Info, scope_size: InstantScopeSize)
-{
-    INSTANCES.push(InstantData {
-        base: BaseInfo::build_now(info),
-        scope_size,
-    });
-}
+pub fn record_custom_instant(info: Info, scope_size: InstantScopeSize) { INSTANCES.push(Trace(BaseInfo::build_now(info), scope_size)); }
 
 pub(super) fn flush_buffers() -> impl Iterator<Item = TaggedTrace>
 {
-    use TaggedTrace::*;
     SCOPES
         .flush()
         .into_iter()
-        .map(|t| Scope(t))
-        .chain(COUNTERS.flush().into_iter().map(|t| Counter(t)))
-        .chain(INSTANCES.flush().into_iter().map(|t| Instant(t)))
+        .map(Trace::tag)
+        .chain(COUNTERS.flush().into_iter().map(Trace::tag))
+        .chain(INSTANCES.flush().into_iter().map(Trace::tag))
 }
 
-static SCOPES: Buffer<ScopeData> = Buffer::init();
-static COUNTERS: Buffer<CounterData> = Buffer::init();
-static INSTANCES: Buffer<InstantData> = Buffer::init();
+static SCOPES: Buffer<Trace<Start>> = Buffer::init();
+static COUNTERS: Buffer<Trace<Value>> = Buffer::init();
+static INSTANCES: Buffer<Trace<InstantScopeSize>> = Buffer::init();
 
 struct Buffer<Data>
 {

@@ -1,12 +1,3 @@
-use super::BaseInfo;
-
-
-pub(crate) struct CounterData
-{
-    pub(crate) base: BaseInfo,
-    pub(crate) value: Value,
-}
-
 pub enum Value
 {
     UInt(u64),
