@@ -28,9 +28,9 @@ pub(super) fn flush_buffers() -> impl Iterator<Item = TaggedTrace>
         .chain(INSTANCES.flush().into_iter().map(Trace::tag))
 }
 
-static SCOPES: Buffer<Trace<Start>> = Buffer::init();
-static COUNTERS: Buffer<Trace<Value>> = Buffer::init();
-static INSTANCES: Buffer<Trace<InstantScopeSize>> = Buffer::init();
+static SCOPES: Buffer<Trace<Start>> = Buffer::init::<30_000>();
+static COUNTERS: Buffer<Trace<Value>> = Buffer::init::<1024>();
+static INSTANCES: Buffer<Trace<InstantScopeSize>> = Buffer::init::<128>();
 
 struct Buffer<Data>
 {
@@ -39,10 +39,10 @@ struct Buffer<Data>
 
 impl<Data> Buffer<Data>
 {
-    const fn init() -> Self
+    const fn init<const CAPACITY: usize>() -> Self
     {
         Self {
-            buffer: LazyLock::new(const { || Mutex::new(Vec::new()) }),
+            buffer: LazyLock::new(const { || Mutex::new(Vec::with_capacity(CAPACITY)) }),
         }
     }
 
