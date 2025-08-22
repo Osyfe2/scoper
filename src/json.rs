@@ -25,7 +25,7 @@ impl RecordScope
 }
 
 #[allow(dead_code)]
-// Viewer do not handle negative well
+// Viewer does not handle negative well
 fn signed_time(earlier: TimePoint, later: TimePoint) -> i128
 {
     if let Some(pdur) = later.checked_duration_since(earlier)
@@ -78,7 +78,7 @@ impl TaggedTrace
 
     fn json_format(&self, zero: TimePoint) -> Option<JsonValue>
     {
-        // Viewer do not handle negative well
+        // Viewer does not handle negative well
         //let time_stamp = signed_time(zero, base.start);
         let time_point = self.0.time_point.checked_duration_since(zero)?.as_micros();
 
