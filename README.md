@@ -1,13 +1,30 @@
 # Read me
 
-Negative potential consequences of an actionEssential information required for user success
-Build on the chromium tracing tools
+Uses the chromium tracing tools for visualisation
 
 > [!IMPORTANT]
 > You can view the result by opening
-> [about://tracing/](about://tracing/) or [https://ui.perfetto.dev/](https://ui.perfetto.dev/)
+> [about://tracing/](about://tracing/) (preferred) or [https://ui.perfetto.dev/](https://ui.perfetto.dev/)
 
 Should work on atleast all chromium based browsers.
+
+## Features
+
+- Enables tracing of a complex program
+- Records timing of functions and scopes
+- Low overhead
+- Multithreading support
+- function attribute and scope macros for convinience
+- Counters
+- Metadata (visible under the M on the top right on the about://tracing/ Website)
+
+## Example Aplication
+
+You can look at examples/simple example 
+
+## Results
+
+Resulting files form the tests are in results/
 
 ## Additional useful links
 
