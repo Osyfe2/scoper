@@ -37,6 +37,44 @@ pub struct TraceInfo<'a>
     pub args: &'a str,
 }
 
+impl<'a> TraceInfo<'a>
+{
+    pub fn new() -> Self
+    {
+        Self
+        {
+            name: "",
+            category: "",
+            header: "",
+            args: "",
+        }
+    }
+
+    pub fn name(mut self, name: &'a str) -> Self
+    {
+        self.name = name;
+        self
+    }
+
+    pub fn category(mut self, category: &'a str) -> Self
+    {
+        self.category = category;
+        self
+    }
+
+    pub fn header(mut self, header: &'a str) -> Self
+    {
+        self.header = header;
+        self
+    }
+
+    pub fn args(mut self, args: &'a str) -> Self
+    {
+        self.args = args;
+        self
+    }
+}
+
 use std::time::Instant as TimePoint;
 
 #[cfg(test)]
