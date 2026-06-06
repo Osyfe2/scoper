@@ -1,1 +1,1 @@
-{"displayTimeUnit":"ms","traceEvents":[]}
+{"displayTimeUnit":"ms","traceEvents":[{"args":{"":1.0,"args":""},"cat":"scoper,test","name":"test_value","ph":"C","pid":"","tid":5,"ts":356467}]}

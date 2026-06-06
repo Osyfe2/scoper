@@ -1,0 +1,8 @@
+[package]
+edition = "2024"
+name = "scoper-noop"
+version = "0.2.0"
+
+[dependencies]
+scoper-attr = { package = "scoper-noop-attr", path = "../scoper-noop-attr" }
+const_format = { workspace = true }

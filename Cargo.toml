@@ -1,18 +1,18 @@
 [workspace]
+members = ["scoper-impl", "scoper-impl-attr", "scoper-noop", "scoper-noop-attr"]
 
-members = ["scoper-attr",]
+[workspace.dependencies]
+const_format = { version = "0.2.34" }
 
 [package]
 authors = ["Fabian Osyguß <fabian.osyguss@gmail.com>"]
 edition = "2024"
 name = "scoper"
-version = "0.2.0"
+version = "0.3.0"
 
 [features]
-impl = ["serde", "serde_json"]
+impl = ["dep:scoper-impl"]
 
 [dependencies]
-scoper-attr = {path = "scoper-attr"}
-serde = { version = "1.0.210", features = ["derive"], optional = true }
-serde_json = { version = "1.0.138", optional = true }
-const_format = "0.2.34"
+scoper-impl = { path = "scoper-impl", optional = true }
+scoper-noop = { path = "scoper-noop" }
