@@ -1,8 +1,9 @@
 use std::sync::{LazyLock, Mutex, MutexGuard};
 
+use scoper_base::*;
+
 use crate::{
-    Info, TimePoint,
-    types::{BaseInfo, InstantScopeSize, Start, TaggedTrace, Trace, Value},
+    TimePoint, scopes::Start, types::{BaseInfo, TaggedTrace, Trace}
 };
 
 pub fn record_custom_scope(info: Info, start: TimePoint, end: TimePoint)

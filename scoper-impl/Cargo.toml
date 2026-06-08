@@ -5,6 +5,7 @@ version = "0.2.0"
 
 [dependencies]
 scoper-attr = { package = "scoper-impl-attr", path = "../scoper-impl-attr" }
+scoper-base ={ workspace = true}
 serde = { version = "1.0.210", features = ["derive"] }
 serde_json = { version = "1.0.138" }
 const_format = { workspace = true }

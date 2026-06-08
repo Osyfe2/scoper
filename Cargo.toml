@@ -1,8 +1,9 @@
 [workspace]
-members = ["scoper-impl", "scoper-impl-attr", "scoper-noop", "scoper-noop-attr"]
+members = ["scoper-base", "scoper-impl", "scoper-impl-attr", "scoper-noop", "scoper-noop-attr"]
 
 [workspace.dependencies]
 const_format = { version = "0.2.34" }
+scoper-base ={ path = "scoper-base"}
 
 [package]
 authors = ["Fabian Osyguß <fabian.osyguss@gmail.com>"]
@@ -14,5 +15,9 @@ version = "0.3.0"
 impl = ["dep:scoper-impl"]
 
 [dependencies]
+scoper-base ={ workspace = true}
 scoper-impl = { path = "scoper-impl", optional = true }
 scoper-noop = { path = "scoper-noop" }
+
+[dev-dependencies]
+scoper = {path = ".", features = ["impl"]}

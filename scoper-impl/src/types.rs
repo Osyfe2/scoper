@@ -1,13 +1,8 @@
-use std::thread::{current, ThreadId};
+use std::thread::{ThreadId, current};
 
-use crate::{Info, TimePoint};
+use scoper_base::{Info, InstantScopeSize, Value};
 
-mod scopes;
-mod value;
-
-pub use scopes::Scope;
-pub use value::Value;
-pub(super) use scopes::Start;
+use crate::{TimePoint, scopes::Start};
 
 pub(super) enum TaggedData
 {
@@ -63,26 +58,4 @@ impl BaseInfo
     }
 
     pub(crate) fn build_now(info: Info) -> Self { Self::build(info, TimePoint::now()) }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Ord, Eq)]
-pub enum InstantScopeSize
-{
-    Thread,
-    Process,
-    Global,
-}
-
-impl InstantScopeSize
-{
-    #[must_use]
-    pub const fn code(self) -> char
-    {
-        match self
-        {
-            InstantScopeSize::Thread => 't',
-            InstantScopeSize::Process => 'p',
-            InstantScopeSize::Global => 'g',
-        }
-    }
 }

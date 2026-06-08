@@ -5,4 +5,5 @@ version = "0.2.0"
 
 [dependencies]
 scoper-attr = { package = "scoper-noop-attr", path = "../scoper-noop-attr" }
+scoper-base ={ workspace = true}
 const_format = { workspace = true }

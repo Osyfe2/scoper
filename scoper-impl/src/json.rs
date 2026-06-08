@@ -1,9 +1,10 @@
 use std::thread::ThreadId;
 
+use scoper_base::{TraceInfo, Value};
 use serde_json::{Map, Number, Value as JsonValue, json};
 
 use crate::{
-    event_types::EventType, global::{self}, record_scope::MetaTrace, types::{TaggedData, TaggedTrace, Trace, Value}, RecordScope, TimePoint, TraceInfo
+    event_types::EventType, global::{self}, record_scope::MetaTrace, types::{TaggedData, TaggedTrace, Trace}, RecordScope, TimePoint
 };
 
 impl RecordScope
@@ -47,7 +48,7 @@ impl TaggedTrace
         match &self.1
         {
             TaggedData::Scope(start) => &start.0,
-            _ => &self.end(),
+            _ => self.end(),
         }
     }
 
@@ -139,16 +140,22 @@ impl TaggedTrace
     }
 }
 
-impl Value
+trait ValueExt
+{
+    fn as_number(&self) -> Number;
+    fn as_args(&self) -> JsonValue;
+}
+
+impl ValueExt for Value
 {
     fn as_number(&self) -> Number
     {
-        use Value::*;
-        match self
+        use scoper_base::Value::*;
+        match *self
         {
-            &UInt(uint) => Number::from_u128(uint.into()),
-            &IInt(iint) => Number::from_i128(iint.into()),
-            &Float(float) => Number::from_f64(float),
+            UInt(uint) => Number::from_u128(uint.into()),
+            IInt(iint) => Number::from_i128(iint.into()),
+            Float(float) => Number::from_f64(float),
         }
         .unwrap()
     }

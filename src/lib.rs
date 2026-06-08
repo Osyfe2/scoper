@@ -1,5 +1,7 @@
 #![warn(clippy::all, clippy::perf, clippy::pedantic)]
 
+pub use scoper_base::*;
+
 #[cfg(feature = "impl")]
 pub use scoper_impl::*;
 
@@ -23,7 +25,7 @@ mod test
             args: "",
         };
 
-        let _profiling_scope = Scope::start(&SCOPE_INFO);
+        let _profiling_scope = Scope::start(SCOPE_INFO);
         let value = 0.8;
         record_custom_value(SCOPE_INFO, value.into());
         sleep(Duration::from_millis(30));
