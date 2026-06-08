@@ -25,7 +25,7 @@ mod test
 
         let _profiling_scope = Scope::start(&SCOPE_INFO);
         let value = 0.8;
-        record_custom_value(SCOPE_INFO, value);
+        record_custom_value(SCOPE_INFO, value.into());
         sleep(Duration::from_millis(30));
     }
 
@@ -66,7 +66,7 @@ mod test
         {
             wait_30_ms_macro();
             sleep(Duration::from_millis(5));
-            record_value!("", "test_value", 0.1 * f64::from(i + 1));
+            record_value!("", "test_value", (0.1 * f64::from(i + 1)).into());
         }
     }
 

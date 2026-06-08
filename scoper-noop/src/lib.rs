@@ -112,11 +112,10 @@ impl InstantScopeSize
 
 pub fn record_custom_instant(_info: Info, _scope_size: InstantScopeSize) {}
 pub fn record_custom_scope(_info: Info, _start: Instant, _end: Instant) {}
-pub fn record_custom_value<V: Into<Value>>(_info: Info, _value: V) {}
+pub fn record_custom_value(_info: Info, _value: Value) {}
 
 pub type Info = &'static TraceInfo<'static>;
 
-//somehow does not appear in the scoper_impl doc but is part of the public API via `record_custom_value`
 pub enum Value
 {
     UInt(u64),

@@ -10,9 +10,8 @@ pub fn record_custom_scope(info: Info, start: TimePoint, end: TimePoint)
     SCOPES.push(Trace(BaseInfo::build(info, end), Start(start)));
 }
 
-pub fn record_custom_value<V: Into<Value>>(info: Info, value: V)
+pub fn record_custom_value(info: Info, value: Value)
 {
-    let value = value.into();
     COUNTERS.push(Trace(BaseInfo::build_now(info), value));
 }
 
@@ -46,7 +45,7 @@ impl<Data> Buffer<Data>
         }
     }
 
-    fn access<'a>(&'a self) -> MutexGuard<'a, Vec<Data>> { self.buffer.lock().expect("Could not get access") }
+    fn access(&self) -> MutexGuard<'_, Vec<Data>> { self.buffer.lock().expect("Could not get access") }
 
     fn push(&self, value: Data) { self.access().push(value); }
 
