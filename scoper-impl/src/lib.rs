@@ -19,7 +19,8 @@ pub mod macros
 
     pub use crate::{record_instant, record_scope, record_value};
 
-    pub mod reexport
+    #[doc(hidden)]
+    pub mod hidden_reexport
     {
         pub use const_format::str_replace;
 

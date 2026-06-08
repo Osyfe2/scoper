@@ -4,11 +4,6 @@ use scoper_base::*;
 
 pub mod macros
 {
-    pub mod reexport
-    {
-        pub use const_format::str_replace;
-    }
-
     #[macro_export]
     macro_rules! record_scope
     {

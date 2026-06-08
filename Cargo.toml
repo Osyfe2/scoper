@@ -2,7 +2,6 @@
 members = ["scoper-base", "scoper-impl", "scoper-impl-attr", "scoper-noop", "scoper-noop-attr"]
 
 [workspace.dependencies]
-const_format = { version = "0.2.34" }
 scoper-base ={ path = "scoper-base"}
 
 [package]

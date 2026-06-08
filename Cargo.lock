@@ -71,9 +71,6 @@ dependencies = [
 [[package]]
 name = "scoper-base"
 version = "0.1.0"
-dependencies = [
- "const_format",
-]
 
 [[package]]
 name = "scoper-impl"
@@ -98,7 +95,6 @@ dependencies = [
 name = "scoper-noop"
 version = "0.2.0"
 dependencies = [
- "const_format",
  "scoper-base",
  "scoper-noop-attr",
 ]
