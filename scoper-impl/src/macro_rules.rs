@@ -1,7 +1,7 @@
 #[macro_export]
 macro_rules! record_scope {
     ($header: expr, $name: expr) => {
-        static TRACE_SCOPE_INFO: scoper_base::TraceInfo = scoper_base::TraceInfo {
+        static TRACE_SCOPE_INFO: scoper::TraceInfo = scoper::TraceInfo {
             name: $name,
             category: $crate::macros::hidden_reexport::str_replace!(::std::module_path!(), "::", ","),
             header: $header,
@@ -18,7 +18,7 @@ macro_rules! record_scope {
 #[macro_export]
 macro_rules! record_value {
     ($header: expr, $name: expr, $value: expr) => {{
-        static TRACE_COUNTER_INFO: scoper_base::TraceInfo = scoper_base::TraceInfo {
+        static TRACE_COUNTER_INFO: scoper::TraceInfo = scoper::TraceInfo {
             name: $name,
             category: $crate::macros::hidden_reexport::str_replace!(::std::module_path!(), "::", ","),
             header: $header,
@@ -35,7 +35,7 @@ macro_rules! record_value {
 #[macro_export]
 macro_rules! record_instant {
     ($header: expr, $name: expr, $scope_size: expr) => {{
-        static TRACE_INSTANT_INFO: scoper_base::TraceInfo = scoper_base::TraceInfo {
+        static TRACE_INSTANT_INFO: scoper::TraceInfo = scoper::TraceInfo {
             name: $name,
             category: $crate::macros::hidden_reexport::str_replace!(::std::module_path!(), "::", ","),
             header: $header,
