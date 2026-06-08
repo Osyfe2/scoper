@@ -60,21 +60,41 @@ checksum = "6ea1a2d0a644769cc99faa24c3ad26b379b786fe7c36fd3c546254801650e6dd"
 
 [[package]]
 name = "scoper"
+version = "0.3.0"
+dependencies = [
+ "scoper-impl",
+ "scoper-noop",
+]
+
+[[package]]
+name = "scoper-impl"
 version = "0.2.0"
 dependencies = [
  "const_format",
- "scoper-attr",
+ "scoper-impl-attr",
  "serde",
  "serde_json",
 ]
 
 [[package]]
-name = "scoper-attr"
+name = "scoper-impl-attr"
 version = "0.1.0"
 dependencies = [
  "quote",
  "syn",
 ]
+
+[[package]]
+name = "scoper-noop"
+version = "0.2.0"
+dependencies = [
+ "const_format",
+ "scoper-noop-attr",
+]
+
+[[package]]
+name = "scoper-noop-attr"
+version = "0.1.0"
 
 [[package]]
 name = "serde"
