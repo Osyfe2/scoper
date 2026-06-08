@@ -1,10 +1,11 @@
 # Read me
 
-Uses the chromium tracing tools for visualisation
+Uses the chromium tracing tools for visualisation.
+There also is the [Firefox Profiler](https://profiler.firefox.com/) that should be compatible, but i have not tested it.
 
 > [!IMPORTANT]
 > You can view the result by opening
-> [about://tracing/](about://tracing/) (preferred) or [https://ui.perfetto.dev/](https://ui.perfetto.dev/)
+> [about://tracing/](about://tracing/) (preferred) or [https://ui.perfetto.dev/](https://ui.perfetto.dev/) or [https://profiler.firefox.com/](https://profiler.firefox.com/)
 
 Should work on atleast all chromium based browsers.
 
@@ -45,3 +46,4 @@ Resulting files form the tests are in results/
   - [ ] Value names
 - [ ] Value JsonValue type?
 - [ ] non static info?
+- [ ] look at [samply crate](https://github.com/mstange/samply)

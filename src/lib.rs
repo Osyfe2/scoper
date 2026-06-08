@@ -1,3 +1,5 @@
+#![warn(clippy::all, clippy::perf, clippy::pedantic)]
+
 #[cfg(feature = "impl")]
 pub use scoper_impl::*;
 

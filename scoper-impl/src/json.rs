@@ -1,3 +1,5 @@
+use std::thread::ThreadId;
+
 use serde_json::{Map, Number, Value as JsonValue, json};
 
 use crate::{
@@ -93,7 +95,7 @@ impl TaggedTrace
             "name": name,
             "cat": category,
             "pid": header,
-            "tid": self.0.thread_id.as_u64(),
+            "tid": print_tread_id(&self.0.thread_id),
             "ph": self.code(),
             "ts": time_point,
             "args": args,
@@ -165,8 +167,8 @@ impl MetaTrace
     {
         let (pid, tid, name) = match self
         {
-            MetaTrace::ProcessName(pid, name) => (pid, 0_u64, name),
-            MetaTrace::ThreadName(pid, tid, name) => (pid, tid.get(), name),
+            MetaTrace::ProcessName(pid, name) => (pid, 0, name),
+            MetaTrace::ThreadName(pid, tid, name) => (pid, print_tread_id(tid), name),
             /* Not in doc
             MetaEvent::ProcessUptimeSeconds(pid, uptime) => serde_json::json!({
                 "args": {"uptime": uptime},
@@ -200,4 +202,13 @@ impl MetaTrace
             "ts": 0,
         })
     }
+}
+
+// Thread_id::as_u64() is stablized this is not needed
+fn print_tread_id(tid: &ThreadId) -> u64
+{
+    // results in ThreadId(3)
+    let mut tid = format!("{:?}", tid).split_off(9);
+    tid.pop();
+    tid.parse().unwrap()
 }

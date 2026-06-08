@@ -65,7 +65,7 @@ impl RecordScope
 
     pub fn name_thread(&mut self, thread_id: ThreadId, header: Pid, name: String)
     {
-        self.meta_traces.push(MetaTrace::ThreadName(header, thread_id.as_u64(), name));
+        self.meta_traces.push(MetaTrace::ThreadName(header, thread_id, name));
     }
 
     pub fn final_header(&mut self, old_header: Pid, new_header: String)
@@ -75,7 +75,7 @@ impl RecordScope
 }
 
 type Pid = &'static str;
-type Tid = std::num::NonZero<u64>;
+type Tid = ThreadId;
 
 #[derive(Debug)]
 pub(crate) enum MetaTrace
