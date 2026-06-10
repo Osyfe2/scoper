@@ -14,7 +14,7 @@ pub struct TraceInfo<'a>
 impl<'a> TraceInfo<'a>
 {
     #[allow(clippy::new_without_default)]
-    pub fn new() -> Self
+    pub const fn new() -> Self
     {
         Self
         {
@@ -25,22 +25,22 @@ impl<'a> TraceInfo<'a>
         }
     }
 
-    pub fn name(self, _name: &'a str) -> Self
+    pub const fn name(self, _name: &'a str) -> Self
     {
         self
     }
 
-    pub fn category(self, _category: &'a str) -> Self
+    pub const fn category(self, _category: &'a str) -> Self
     {
         self
     }
 
-    pub fn header(self, _header: &'a str) -> Self
+    pub const fn header(self, _header: &'a str) -> Self
     {
         self
     }
 
-    pub fn args(self, _args: &'a str) -> Self
+    pub const fn args(self, _args: &'a str) -> Self
     {
         self
     }
